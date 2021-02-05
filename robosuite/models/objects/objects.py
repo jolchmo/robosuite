@@ -349,9 +349,10 @@ class MujocoXMLObject(MujocoObject, MujocoXML):
             if not _should_keep(element):
                 parent.remove(element)
             else:
-                g_name = element.get("name")
-                g_name = g_name if g_name is not None else f"g{i}"
-                element.set("name", g_name)
+                if parent.tag != "composite":
+                    g_name = element.get("name")
+                    g_name = g_name if g_name is not None else f"g{i}"
+                    element.set("name", g_name)
                 # Also optionally duplicate collision geoms if requested (and this is a collision geom)
                 if self.duplicate_collision_geoms and element.get("group") in {None, "0"}:
                     parent.append(self._duplicate_visual_from_collision(element))
