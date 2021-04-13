@@ -6,7 +6,7 @@ import math
 
 
 # Supported impedance modes
-IMPEDANCE_MODES = {"fixed", "variable", "variable_kp"}
+IMPEDANCE_MODES = {"fixed", "variable", "variable_kp", "tracking"}
 
 # TODO: Maybe better naming scheme to differentiate between input / output min / max and pos/ori limits, etc.
 
@@ -139,11 +139,15 @@ class OperationalSpaceController(Controller):
         self.use_ori = control_ori
 
         # Determine whether we want to use delta or absolute values as inputs
-        self.use_delta = control_delta
+        self.use_delta = control_delta if not impedance_mode == "tracking" else False
 
         # Control dimension
         self.control_dim = 6 if self.use_ori else 3
         self.name_suffix = "POSE" if self.use_ori else "POSITION"
+
+        # Absolute commands to follow. Only for "tracking" mode. Must be set by environment
+        self.traj_pos = None
+        self.traj_ori = None    # axis angle
 
         # input and output max and min (allow for either explicit lists or single numbers)
         self.input_max = self.nums2array(input_max, self.control_dim)
@@ -207,12 +211,18 @@ class OperationalSpaceController(Controller):
             :Mode `'fixed'`: [joint pos command]
             :Mode `'variable'`: [damping_ratio values, kp values, joint pos command]
             :Mode `'variable_kp'`: [kp values, joint pos command]
+            :Mode `'tracking'`: [kp values]
 
         Args:
             action (Iterable): Desired relative joint position goal state
             set_pos (Iterable): If set, overrides @action and sets the desired absolute eef position goal state
             set_ori (Iterable): IF set, overrides @action and sets the desired absolute eef orientation goal state
+            abs_command (Iterable): Absolute position and orientation command to be set as goal state
         """
+        if self.impedance_mode == "tracking":
+            assert self.traj_pos is not None, "Tracking mode must have defined trajectory point"
+            assert self.traj_ori is not None, "Tracking mode must have defined trajectory orientation"
+
         # Update state
         self.update()
 
@@ -223,6 +233,10 @@ class OperationalSpaceController(Controller):
             self.kd = 2 * np.sqrt(self.kp) * np.clip(damping_ratio, self.damping_ratio_min, self.damping_ratio_max)
         elif self.impedance_mode == "variable_kp":
             kp, delta = action[:6], action[6:]
+            self.kp = np.clip(kp, self.kp_min, self.kp_max)
+            self.kd = 2 * np.sqrt(self.kp)  # critically damped
+        elif self.impedance_mode == "tracking":
+            kp = action
             self.kp = np.clip(kp, self.kp_min, self.kp_max)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         else:   # This is case "fixed"
@@ -237,6 +251,14 @@ class OperationalSpaceController(Controller):
                     set_ori = np.array([[0, -1., 0.], [-1., 0., 0.], [0., 0., 1.]])
             else:
                 scaled_delta = []
+
+        # Use trajectory as absolute commands
+        elif self.impedance_mode == "tracking":
+            scaled_delta = np.concatenate((self.traj_pos, self.traj_ori))
+            set_pos = self.traj_pos
+            set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
+            
+
         # Else, interpret actions as absolute values
         else:
             if set_pos is None:
@@ -394,6 +416,8 @@ class OperationalSpaceController(Controller):
         elif self.impedance_mode == "variable_kp":
             low = np.concatenate([self.kp_min, self.input_min])
             high = np.concatenate([self.kp_max, self.input_max])
+        elif self.impedance_mode == "tracking":
+            low, high = self.kp_min, self.kp_max
         else:  # This is case "fixed"
             low, high = self.input_min, self.input_max
         return low, high
