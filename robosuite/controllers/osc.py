@@ -255,7 +255,7 @@ class OperationalSpaceController(Controller):
         # Use trajectory as absolute commands
         elif self.impedance_mode == "tracking":
             scaled_delta = np.concatenate((self.traj_pos, self.traj_ori))
-            set_pos = self.traj_pos
+            set_pos = np.array(self.traj_pos)
             set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
             
 
