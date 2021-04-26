@@ -5,6 +5,7 @@ from .osc import OperationalSpaceController
 from .joint_vel import JointVelocityController
 from .joint_pos import JointPositionController
 from .joint_tor import JointTorqueController
+from .hmfc import HybridMotionForceController
 from .interpolators.linear_interpolator import LinearInterpolator
 
 import json
@@ -51,7 +52,7 @@ def load_controller_config(custom_fpath=None, default_controller=None):
         custom_fpath (str): Absolute filepath to the custom controller configuration .json file to be loaded
         default_controller (str): If specified, overrides @custom_fpath and loads a default configuration file for the
             specified controller.
-            Choices are: {"JOINT_POSITION", "JOINT_TORQUE", "JOINT_VELOCITY", "OSC_POSITION", "OSC_POSE", "IK_POSE"}
+            Choices are: {"JOINT_POSITION", "JOINT_TORQUE", "JOINT_VELOCITY", "OSC_POSITION", "OSC_POSE", "IK_POSE", "HMFC"}
 
     Returns:
         dict: Controller configuration
@@ -95,7 +96,7 @@ def controller_factory(name, params):
 
     Args:
         name (str): the name of the controller. Must be one of: {JOINT_POSITION, JOINT_TORQUE, JOINT_VELOCITY,
-            OSC_POSITION, OSC_POSE, IK_POSE}
+            OSC_POSITION, OSC_POSE, IK_POSE, HMFC}
         params (dict): dict containing the relevant params to pass to the controller
         sim (MjSim): Mujoco sim reference to pass to the controller
 
@@ -155,5 +156,8 @@ def controller_factory(name, params):
 
     if name == "JOINT_TORQUE":
         return JointTorqueController(interpolator=interpolator, **params)
+
+    if name == "HMFC":
+        return HybridMotionForceController(**params)
 
     raise ValueError("Unknown controller name: {}".format(name))

@@ -3,6 +3,7 @@ from .osc import OperationalSpaceController
 from .joint_pos import JointPositionController
 from .joint_vel import JointVelocityController
 from .joint_tor import JointTorqueController
+from .hmfc import HybridMotionForceController
 
 
 CONTROLLER_INFO = {
@@ -12,6 +13,7 @@ CONTROLLER_INFO = {
     "OSC_POSITION": "Operational Space Control (Position Only)",
     "OSC_POSE":     "Operational Space Control (Position + Orientation)",
     "IK_POSE":      "Inverse Kinematics Control (Position + Orientation) (Note: must have PyBullet installed)",
+    "HMFC":         "Hybrid Motion/Force Control"
 }
 
 ALL_CONTROLLERS = CONTROLLER_INFO.keys()
