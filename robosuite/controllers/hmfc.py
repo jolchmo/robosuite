@@ -230,8 +230,8 @@ class HybridMotionForceController(Controller):
         cartesian_inertia = np.linalg.inv(np.linalg.multi_dot([self.J_full, np.linalg.inv(self.mass_matrix), self.J_full.T]))
 
         # torque computations
-        external_torque = np.dot(self.J_full.T, h_e)
-        torque = np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha]) + external_torque  # NOTE MODIFIED FROM DEFAULT. Removed coriolis force
+        #external_torque = np.dot(self.J_full.T, h_e)
+        torque = self.torque_compensation + np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha])
 
         # Always run superclass call for any cleanups at the end
         super().run_controller()
