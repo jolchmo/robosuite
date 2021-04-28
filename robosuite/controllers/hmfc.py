@@ -66,16 +66,16 @@ class HybridMotionForceController(Controller):
         self.K_dot = self.get_K_dot()
 
         # force control dynamics
-        self.K_Plambda = 45                       # force gain
-        self.K_Dlambda = self.K_Plambda*0.001     # force damping
+        self.K_Plambda = 90                       # force gain
+        self.K_Dlambda = 2*np.sqrt(self.K_Plambda)#self.K_Plambda*0.001     # force damping
 
         # position control dynamics
-        self.Pp = 60                         # x and y pos gain 
-        self.Dp = self.Pp*0.1*0.5*0.5        # x and y pos damping
+        self.Pp = 150                         # x and y pos gain 
+        self.Dp = 2*np.sqrt(self.Pp)          # x and y pos damping
 
         # orientation control dynamics
-        self.Po = 50                                   # orientation gain
-        self.Do = 1                                    # orientation damping
+        self.Po = 100                                   # orientation gain
+        self.Do = 2*np.sqrt(self.Po)                   # orientation damping
 
         self.K_Pr = np.array([[self.Pp, 0, 0, 0, 0],    # Stiffness matrix
                               [0, self.Pp, 0, 0, 0],
@@ -98,20 +98,24 @@ class HybridMotionForceController(Controller):
         self.r_d_dot = np.zeros(5) 
         self.r_d_ddot = np.zeros(5)         
 
-        self.f_d = 2                        # force trajectory
+        self.f_d = 5                        # force trajectory (N)
         self.f_d_dot = 0
         self.f_d_ddot = 0 
 
         self.goal_ori = np.array([-0.69192486,  0.72186726, -0.00514253, -0.01100909])  # (x, y, z, w) quaternion
 
+        # initialize trajectory point from environment
+        self.traj_pos = None                # will be sat from the enviromnent
+
         # initialize measurements
-        self.z_force = 0                    # contact force in z-direction
+        self.z_force = 0                    # force in z-direction
         self.v = np.zeros(5)                # angular and linear (excluding z) velocity
 
 
     def _initialize_measurements(self):
         self.probe_id = self.sim.model.body_name2id(self.robot.gripper.root_body)
-        self.z_force = self.sim.data.cfrc_ext[self.probe_id][-1]
+        self.z_force = self.robot.ee_force[-1]
+        #self.z_force = self.sim.data.cfrc_ext[self.probe_id][-1]
         self.v = self.get_eef_velocity()
 
 
@@ -131,7 +135,7 @@ class HybridMotionForceController(Controller):
         lin_v = self.robot._hand_vel[:-1]
         ang_v = self.robot._hand_ang_vel
 
-        return np.concatenate((lin_v, ang_v))
+        return np.append(lin_v, ang_v)
 
 
     # Fetch the derivative of the force as in equation (9.66) in chapter 9.4 of The Handbook of Robotics
@@ -184,15 +188,25 @@ class HybridMotionForceController(Controller):
 
 
     def set_goal(self, action):
-        
-        self.r_d_ddot = np.zeros(5)         # position trajectories [placeholder]
-        self.r_d_dot = np.zeros(5)     
-        self.p_d = self.p_d
 
-        self.f_d_ddot = 0                   # force trajectories [placeholder]
+        timestep = 1 / self.control_freq        # should be self.model_timestep instead?
+
+        # update position trajectory
+        prev_p_d = self.p_d
+        self.p_d = self.traj_pos[:-1]
+
+        prev_r_d_dot = self.r_d_dot
+        p_dot = np.subtract(self.p_d, prev_p_d) / timestep
+        ori_dot = np.array([0, 0, 0])
+        self.r_d_dot = np.append(p_dot, ori_dot)
+
+        self.r_d_ddot = np.subtract(self.r_d_dot, prev_r_d_dot) / timestep
+
+        # update force trajectory
+        self.f_d = self.f_d     # constant
         self.f_d_dot = 0
-        self.f_d = 0
-         
+        self.f_d_ddot = 0                   
+                 
 
     def run_controller(self):
         
@@ -200,7 +214,7 @@ class HybridMotionForceController(Controller):
         self.update()
 
         # eef measurements
-        self.z_force = self.sim.data.cfrc_ext[self.probe_id][-1]
+        self.z_force = self.robot.ee_force[-1] # self.sim.data.cfrc_ext[self.probe_id][-1]
         self.v = self.get_eef_velocity()
         
         pos = self.ee_pos
