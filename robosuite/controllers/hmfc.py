@@ -37,6 +37,7 @@ class HybridMotionForceController(Controller):
 
         # control frequency
         self.control_freq = policy_freq
+        self.control_timestep = 1 / self.control_freq
 
         # subspace
         self.S_f = np.array([[0, 0, 1, 0, 0, 0]]).reshape([6,1])     # force-control-subspace (only doing force control in z)
@@ -66,7 +67,7 @@ class HybridMotionForceController(Controller):
         self.K_dot = self.get_K_dot()
 
         # force control dynamics
-        self.K_Plambda = 90                       # force gain
+        self.K_Plambda = 15                       # force gain
         self.K_Dlambda = 2*np.sqrt(self.K_Plambda)#self.K_Plambda*0.001     # force damping
 
         # position control dynamics
@@ -108,14 +109,18 @@ class HybridMotionForceController(Controller):
         self.traj_pos = None                # will be sat from the enviromnent
 
         # initialize measurements
-        self.z_force = 0                    # force in z-direction
-        self.v = np.zeros(5)                # angular and linear (excluding z) velocity
+        self.z_force = 0                            # force in z-direction
+        self.prev_z_force = self.z_force            # force in z-direction from previous timestep
+        self.z_force_running_mean = self.z_force
+        self.v = np.zeros(5)                        # angular and linear (excluding z) velocity
 
 
     def _initialize_measurements(self):
         self.probe_id = self.sim.model.body_name2id(self.robot.gripper.root_body)
         self.z_force = self.robot.ee_force[-1]
         #self.z_force = self.sim.data.cfrc_ext[self.probe_id][-1]
+        self.prev_z_force = self.z_force
+        self.z_force_running_mean = self.z_force
         self.v = self.get_eef_velocity()
 
 
@@ -138,9 +143,12 @@ class HybridMotionForceController(Controller):
         return np.append(lin_v, ang_v)
 
 
-    # Fetch the derivative of the force as in equation (9.66) in chapter 9.4 of The Handbook of Robotics
-    def get_lambda_dot(self):
-        return np.linalg.multi_dot([self.S_f_inv, self.K_dot, self.J_full, self.joint_vel])
+    def get_lambda_dot(self, analytical=True):
+        if analytical:
+            # Fetch the derivative of the force as in equation (9.66) in chapter 9.4 of The Handbook of Robotics
+            return np.linalg.multi_dot([self.S_f_inv, self.K_dot, self.J_full, self.joint_vel])
+
+        return (self.z_force - self.prev_z_force) / self.control_timestep
 
 
     # Fetch the psudoinverse of S_f or S_v as in equation (9.34) in chapter 9.3 of The Handbook of Robotics
@@ -189,18 +197,17 @@ class HybridMotionForceController(Controller):
 
     def set_goal(self, action):
 
-        timestep = 1 / self.control_freq        # should be self.model_timestep instead?
-
         # update position trajectory
         prev_p_d = self.p_d
         self.p_d = self.traj_pos[:-1]
 
         prev_r_d_dot = self.r_d_dot
-        p_dot = np.subtract(self.p_d, prev_p_d) / timestep
+
+        p_dot = np.subtract(self.p_d, prev_p_d) / self.control_timestep
         ori_dot = np.array([0, 0, 0])
         self.r_d_dot = np.append(p_dot, ori_dot)
 
-        self.r_d_ddot = np.subtract(self.r_d_dot, prev_r_d_dot) / timestep
+        self.r_d_ddot = np.subtract(self.r_d_dot, prev_r_d_dot) / self.control_timestep
 
         # update force trajectory
         self.f_d = self.f_d     # constant
@@ -214,13 +221,15 @@ class HybridMotionForceController(Controller):
         self.update()
 
         # eef measurements
-        self.z_force = self.robot.ee_force[-1] # self.sim.data.cfrc_ext[self.probe_id][-1]
+        #self.z_force =  self.sim.data.cfrc_ext[self.probe_id][-1]
+        self.z_force = self.robot.ee_force[-1]
+        self.z_force_running_mean = 0.02 * self.z_force + (1 - 0.02) * self.z_force_running_mean
         self.v = self.get_eef_velocity()
         
         pos = self.ee_pos
         ori = T.mat2quat(self.ee_ori_mat)   # (x, y, z, w) quaternion
 
-        h_e = np.array([0, 0, self.z_force, 0, 0, 0])
+        h_e = np.array([0, 0, self.z_force_running_mean, 0, 0, 0])
 
         # control law
         alpha_v = self.calculate_alpha_v(ori, self.r_d_ddot, self.r_d_dot, pos, self.p_d) 
@@ -230,8 +239,11 @@ class HybridMotionForceController(Controller):
         cartesian_inertia = np.linalg.inv(np.linalg.multi_dot([self.J_full, np.linalg.inv(self.mass_matrix), self.J_full.T]))
 
         # torque computations
-        #external_torque = np.dot(self.J_full.T, h_e)
-        torque = self.torque_compensation + np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha])
+        external_torque = np.dot(self.J_full.T, h_e)
+        torque = np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha]) + self.torque_compensation + external_torque
+
+        # update measurement
+        self.prev_z_force = self.z_force
 
         # Always run superclass call for any cleanups at the end
         super().run_controller()
