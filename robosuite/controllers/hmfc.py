@@ -229,7 +229,7 @@ class HybridMotionForceController(Controller):
         pos = self.ee_pos
         ori = T.mat2quat(self.ee_ori_mat)   # (x, y, z, w) quaternion
 
-        h_e = np.array([0, 0, self.z_force_running_mean, 0, 0, 0])
+        h_e = np.array([0, 0, self.z_force, 0, 0, 0])
 
         # control law
         alpha_v = self.calculate_alpha_v(ori, self.r_d_ddot, self.r_d_dot, pos, self.p_d) 
