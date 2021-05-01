@@ -139,7 +139,7 @@ class OperationalSpaceController(Controller):
         self.use_ori = control_ori
 
         # Determine whether we want to use delta or absolute values as inputs
-        self.use_delta = control_delta if not impedance_mode == "tracking" else False
+        self.use_delta = control_delta if not (impedance_mode == "tracking" or impedance_mode == "variable_z") else False
 
         # Control dimension
         self.control_dim = 6 if self.use_ori else 3
