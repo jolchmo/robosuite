@@ -120,7 +120,8 @@ def orientation_error(desired, current):
 def set_goal_position(delta,
                       current_position,
                       position_limit=None,
-                      set_pos=None):
+                      set_pos=None,
+                      variable_z=False):
     """
     Calculates and returns the desired goal position, clipping the result accordingly to @position_limits.
     @delta and @current_position must be specified if a relative goal is requested, else @set_pos must be
@@ -131,6 +132,7 @@ def set_goal_position(delta,
         current_position (np.array): Current position
         position_limit (None or np.array): 2d array defining the (min, max) limits of permissible position goal commands
         set_pos (None or np.array): If set, will ignore @delta and set the goal position to this value
+        variable_z (bool): If set, will set x and y as goal positions, but interpret z as delta
 
     Returns:
         np.array: calculated goal position in absolute coordinates
@@ -139,7 +141,10 @@ def set_goal_position(delta,
         ValueError: [Invalid position_limit shape]
     """
     n = len(current_position)
-    if set_pos is not None:
+    if variable_z:
+        z_pos = current_position[-1] + delta[-1]
+        goal_position = np.array([set_pos[0], set_pos[1], z_pos])
+    elif set_pos is not None:
         goal_position = set_pos
     else:
         goal_position = current_position + delta

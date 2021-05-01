@@ -6,7 +6,7 @@ import math
 
 
 # Supported impedance modes
-IMPEDANCE_MODES = {"fixed", "variable", "variable_kp", "tracking"}
+IMPEDANCE_MODES = {"fixed", "variable", "variable_kp", "tracking", "variable_z"}
 
 # TODO: Maybe better naming scheme to differentiate between input / output min / max and pos/ori limits, etc.
 
@@ -145,7 +145,7 @@ class OperationalSpaceController(Controller):
         self.control_dim = 6 if self.use_ori else 3
         self.name_suffix = "POSE" if self.use_ori else "POSITION"
 
-        # Absolute commands to follow. Only for "tracking" mode. Must be set by environment
+        # Absolute commands to follow. Only for "tracking" and "variable_z" mode. Must be set by environment
         self.traj_pos = None
         self.traj_ori = None    # axis angle
 
@@ -178,6 +178,8 @@ class OperationalSpaceController(Controller):
             self.control_dim += 12
         elif self.impedance_mode == "variable_kp":
             self.control_dim += 6
+        elif self.impedance_mode == "variable_z":
+            self.control_dim += 1
 
         # limits
         self.position_limits = np.array(position_limits) if position_limits is not None else position_limits
@@ -212,6 +214,7 @@ class OperationalSpaceController(Controller):
             :Mode `'variable'`: [damping_ratio values, kp values, joint pos command]
             :Mode `'variable_kp'`: [kp values, joint pos command]
             :Mode `'tracking'`: [kp values]
+            :Mode `'variable_z'`: [kp values, delta_z]
 
         Args:
             action (Iterable): Desired relative joint position goal state
@@ -219,9 +222,9 @@ class OperationalSpaceController(Controller):
             set_ori (Iterable): IF set, overrides @action and sets the desired absolute eef orientation goal state
             abs_command (Iterable): Absolute position and orientation command to be set as goal state
         """
-        if self.impedance_mode == "tracking":
-            assert self.traj_pos is not None, "Tracking mode must have defined trajectory point"
-            assert self.traj_ori is not None, "Tracking mode must have defined trajectory orientation"
+        if self.impedance_mode == "tracking" or self.impedance_mode=="variable_z":
+            assert self.traj_pos is not None, "Impedance mode must have defined trajectory point"
+            assert self.traj_ori is not None, "Impedance mode must have defined trajectory orientation"
 
         # Update state
         self.update()
@@ -237,6 +240,10 @@ class OperationalSpaceController(Controller):
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         elif self.impedance_mode == "tracking":
             kp = action
+            self.kp = np.clip(kp, self.kp_min, self.kp_max)
+            self.kd = 2 * np.sqrt(self.kp)  # critically damped
+        elif self.impedance_mode == "variable_z":
+            kp, delta_z = action[:6], action[-1]
             self.kp = np.clip(kp, self.kp_min, self.kp_max)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         else:   # This is case "fixed"
@@ -257,7 +264,21 @@ class OperationalSpaceController(Controller):
             scaled_delta = np.concatenate((self.traj_pos, self.traj_ori))
             set_pos = np.array(self.traj_pos)
             set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
-            
+
+        # Use x and y trajectory and orientation as absolute commands, but z as delta.
+        elif self.impedance_mode == "variable_z":
+            # scale delta z
+            self.action_scale = abs(self.output_max[2] - self.output_min[2]) / abs(self.input_max[2] - self.input_min[2])
+            self.action_output_transform = (self.output_max[2] + self.output_min[2]) / 2.0
+            self.action_input_transform = (self.input_max[2] + self.input_min[2]) / 2.0
+            delta_z = np.clip(delta_z, self.input_min[2], self.input_max[2])
+            scaled_delta_z = (delta_z - self.action_input_transform) * self.action_scale + self.action_output_transform
+
+            # set commands
+            pos = [self.traj_pos[0], self.traj_pos[1], scaled_delta_z]
+            scaled_delta = np.concatenate((pos, self.traj_ori))
+            set_pos = pos
+            set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
 
         # Else, interpret actions as absolute values
         else:
@@ -270,6 +291,8 @@ class OperationalSpaceController(Controller):
             # No scaling of values since these are absolute values
             scaled_delta = delta
 
+        variable_z = self.impedance_mode == "variable_z"
+
         # We only want to update goal orientation if there is a valid delta ori value OR if we're using absolute ori
         # use math.isclose instead of numpy because numpy is slow
         bools = [0. if math.isclose(elem, 0.) else 1. for elem in scaled_delta[3:]]
@@ -281,8 +304,8 @@ class OperationalSpaceController(Controller):
         self.goal_pos = set_goal_position(scaled_delta[:3],
                                           self.ee_pos,
                                           position_limit=self.position_limits,
-                                          set_pos=set_pos)
-
+                                          set_pos=set_pos,
+                                          variable_z=variable_z)
         if self.interpolator_pos is not None:
             self.interpolator_pos.set_goal(self.goal_pos)
 
@@ -403,6 +426,8 @@ class OperationalSpaceController(Controller):
             :Mode `'fixed'`: [joint pos command]
             :Mode `'variable'`: [damping_ratio values, kp values, joint pos command]
             :Mode `'variable_kp'`: [kp values, joint pos command]
+            :Mode `'tracking'`: [kp values]
+            :Mode `'variable_z'`: [kp values, delta_z]
 
         Returns:
             2-tuple:
@@ -418,6 +443,9 @@ class OperationalSpaceController(Controller):
             high = np.concatenate([self.kp_max, self.input_max])
         elif self.impedance_mode == "tracking":
             low, high = self.kp_min, self.kp_max
+        elif self.impedance_mode == "variable_z":
+            low = np.concatenate([self.kp_min, [self.input_min[2]]])
+            high = np.concatenate([self.kp_max, [self.input_max[2]]])
         else:  # This is case "fixed"
             low, high = self.input_min, self.input_max
         return low, high
