@@ -120,7 +120,7 @@ class HybridMotionForceController(Controller):
         self.z_force = self.robot.ee_force[-1]
         #self.z_force = self.sim.data.cfrc_ext[self.probe_id][-1]
         self.prev_z_force = self.z_force
-        self.z_force_running_mean = self.z_force
+        self.z_force_running_mean = 0
         self.v = self.get_eef_velocity()
 
 
@@ -223,7 +223,7 @@ class HybridMotionForceController(Controller):
         # eef measurements
         #self.z_force =  self.sim.data.cfrc_ext[self.probe_id][-1]
         self.z_force = self.robot.ee_force[-1]
-        self.z_force_running_mean = 0.02 * self.z_force + (1 - 0.02) * self.z_force_running_mean
+        self.z_force_running_mean = 0.1 * self.z_force + (1 - 0.1) * self.z_force_running_mean
         self.v = self.get_eef_velocity()
         
         pos = self.ee_pos
@@ -239,8 +239,10 @@ class HybridMotionForceController(Controller):
         cartesian_inertia = np.linalg.inv(np.linalg.multi_dot([self.J_full, np.linalg.inv(self.mass_matrix), self.J_full.T]))
 
         # torque computations
-        external_torque = np.dot(self.J_full.T, h_e)
-        torque = np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha]) + self.torque_compensation + external_torque
+        self.external_torque = np.dot(self.J_full.T, h_e)
+        self.desired_torque = np.linalg.multi_dot([self.J_full.T ,cartesian_inertia, alpha])
+
+        self.torques = self.desired_torque + self.torque_compensation + self.external_torque
 
         # update measurement
         self.prev_z_force = self.z_force
@@ -248,7 +250,7 @@ class HybridMotionForceController(Controller):
         # Always run superclass call for any cleanups at the end
         super().run_controller()
 
-        return torque
+        return self.torques
 
 
     def update_initial_joints(self, initial_joints):
@@ -270,7 +272,6 @@ class HybridMotionForceController(Controller):
     def control_limits(self):
         """
         Returns the limits over this controller's action space, overrides the superclass property
-
             2-tuple:
                 - (np.array) minimum action values
                 - (np.array) maximum action values
