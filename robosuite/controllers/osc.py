@@ -164,6 +164,8 @@ class OperationalSpaceController(Controller):
         self.kp_max = self.nums2array(kp_limits[1], 6)
         self.damping_ratio_min = self.nums2array(damping_ratio_limits[0], 6)
         self.damping_ratio_max = self.nums2array(damping_ratio_limits[1], 6)
+        self.kp_input_min = self.nums2array(0, 6)
+        self.kp_input_max = self.nums2array(1, 6)
 
         # Verify the proposed impedance mode is supported
         assert impedance_mode in IMPEDANCE_MODES, "Error: Tried to instantiate OSC controller for unsupported " \
@@ -240,7 +242,7 @@ class OperationalSpaceController(Controller):
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         elif self.impedance_mode == "tracking":
             kp = action
-            self.kp = np.clip(kp, self.kp_min, self.kp_max)
+            self.kp = self.scale_kp(kp)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         elif self.impedance_mode == "variable_z":
             kp, delta_z = action[:6], action[-1]
@@ -306,6 +308,7 @@ class OperationalSpaceController(Controller):
                                           position_limit=self.position_limits,
                                           set_pos=set_pos,
                                           variable_z=variable_z)
+
         if self.interpolator_pos is not None:
             self.interpolator_pos.set_goal(self.goal_pos)
 
@@ -417,6 +420,27 @@ class OperationalSpaceController(Controller):
             self.interpolator_ori.set_goal(orientation_error(self.goal_ori, self.ori_ref))  # goal is the total orientation error
             self.relative_ori = np.zeros(3)  # relative orientation always starts at 0
 
+
+    def scale_kp(self, kp):
+        """
+        Clips @kp to be within 0 and 1, and then re-scale the values to be within
+        the range self.kp_min and self.kp_max
+
+        Args:
+            action (Iterable): kp to scale
+
+        Returns:
+            np.array: Re-scaled kp
+        """
+        self.kp_scale = abs(self.kp_max - self.kp_min) / abs(self.kp_input_max - self.kp_input_min)
+        self.kp_output_transform = (self.kp_max + self.kp_min) / 2.0
+        self.kp_input_transform = (self.kp_input_max + self.kp_input_min) / 2.0
+        kp_clipped = np.clip(kp, self.kp_input_min, self.kp_input_max)
+        scaled_kp = (kp_clipped - self.kp_input_transform) * self.kp_scale + self.kp_output_transform
+
+        return scaled_kp
+
+
     @property
     def control_limits(self):
         """
@@ -442,7 +466,7 @@ class OperationalSpaceController(Controller):
             low = np.concatenate([self.kp_min, self.input_min])
             high = np.concatenate([self.kp_max, self.input_max])
         elif self.impedance_mode == "tracking":
-            low, high = self.kp_min, self.kp_max
+            low, high = self.kp_input_min, self.kp_input_max
         elif self.impedance_mode == "variable_z":
             low = np.concatenate([self.kp_min, [self.input_min[2]]])
             high = np.concatenate([self.kp_max, [self.input_max[2]]])
