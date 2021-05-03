@@ -180,9 +180,11 @@ class OperationalSpaceController(Controller):
             self.control_dim += 12
         elif self.impedance_mode == "variable_kp":
             self.control_dim += 6
+        elif self.impedance_mode == "tracking" or self.impedance_mode == "force":
+            self.control_dim = 6
         elif self.impedance_mode == "variable_z":
-            self.control_dim += 1
-
+            self.control_dim = 7
+        
         # limits
         self.position_limits = np.array(position_limits) if position_limits is not None else position_limits
         self.orientation_limits = np.array(orientation_limits) if orientation_limits is not None else orientation_limits
@@ -384,7 +386,7 @@ class OperationalSpaceController(Controller):
         else:
             desired_wrench = np.concatenate([desired_force, desired_torque]) if self.impedance_mode != "force" else self.action
             decoupled_wrench = np.dot(lambda_full, desired_wrench)
-
+        
         # Gamma (without null torques) = J^T * F + gravity compensations
         self.torques = np.dot(self.J_full.T, decoupled_wrench) + self.torque_compensation
 
