@@ -6,7 +6,7 @@ import math
 
 
 # Supported impedance modes
-IMPEDANCE_MODES = {"fixed", "variable", "variable_kp", "tracking", "variable_z"}
+IMPEDANCE_MODES = {"fixed", "variable", "variable_kp", "tracking", "variable_z", "force"}
 
 # TODO: Maybe better naming scheme to differentiate between input / output min / max and pos/ori limits, etc.
 
@@ -139,7 +139,7 @@ class OperationalSpaceController(Controller):
         self.use_ori = control_ori
 
         # Determine whether we want to use delta or absolute values as inputs
-        self.use_delta = control_delta if not (impedance_mode == "tracking" or impedance_mode == "variable_z") else False
+        self.use_delta = control_delta if not (impedance_mode == "tracking" or impedance_mode == "variable_z" or impedance_mode == "force") else False
 
         # Control dimension
         self.control_dim = 6 if self.use_ori else 3
@@ -195,7 +195,7 @@ class OperationalSpaceController(Controller):
         self.interpolator_ori = interpolator_ori
 
         # whether or not pos and ori want to be uncoupled
-        self.uncoupling = uncouple_pos_ori
+        self.uncoupling = uncouple_pos_ori if self.impedance_mode != "force" else False
 
         # initialize goals based on initial pos / ori
         self.goal_ori = np.array(self.initial_ee_ori_mat)
@@ -248,6 +248,9 @@ class OperationalSpaceController(Controller):
             kp, delta_z = action[:6], action[-1]
             self.kp = self.scale_kp(kp)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
+        elif self.impedance_mode == "force":
+            self.kd = 2 * np.sqrt(self.kp)  # critically damped
+            self.action = action            # cartesian force
         else:   # This is case "fixed"
             delta = action
 
@@ -262,7 +265,7 @@ class OperationalSpaceController(Controller):
                 scaled_delta = []
 
         # Use trajectory as absolute commands
-        elif self.impedance_mode == "tracking":
+        elif self.impedance_mode == "tracking" or self.impedance_mode == "force":
             scaled_delta = np.concatenate((self.traj_pos, self.traj_ori))
             set_pos = np.array(self.traj_pos)
             set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
@@ -280,7 +283,7 @@ class OperationalSpaceController(Controller):
             pos = [self.traj_pos[0], self.traj_pos[1], scaled_delta_z]
             scaled_delta = np.concatenate((pos, self.traj_ori))
             set_pos = pos
-            set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))
+            set_ori = T.quat2mat(T.axisangle2quat(self.traj_ori))            
 
         # Else, interpret actions as absolute values
         else:
@@ -359,7 +362,7 @@ class OperationalSpaceController(Controller):
 
         # F_r = kp * pos_err + kd * vel_err
         desired_force = (np.multiply(np.array(position_error), np.array(self.kp[0:3]))
-                         + np.multiply(vel_pos_error, self.kd[0:3]))
+                        + np.multiply(vel_pos_error, self.kd[0:3]))
 
         vel_ori_error = -self.ee_ori_vel
 
@@ -379,7 +382,7 @@ class OperationalSpaceController(Controller):
             decoupled_torque = np.dot(lambda_ori, desired_torque)
             decoupled_wrench = np.concatenate([decoupled_force, decoupled_torque])
         else:
-            desired_wrench = np.concatenate([desired_force, desired_torque])
+            desired_wrench = np.concatenate([desired_force, desired_torque]) if self.impedance_mode != "force" else self.action
             decoupled_wrench = np.dot(lambda_full, desired_wrench)
 
         # Gamma (without null torques) = J^T * F + gravity compensations
@@ -423,7 +426,7 @@ class OperationalSpaceController(Controller):
 
     def scale_kp(self, kp):
         """
-        Clips @kp to be within 0 and 1, and then re-scale the values to be within
+        Clips @kp to be within self.kp_input_min and self.kp_input_max, and then re-scale the values to be within
         the range self.kp_min and self.kp_max
 
         Args:
@@ -470,6 +473,10 @@ class OperationalSpaceController(Controller):
         elif self.impedance_mode == "variable_z":
             low = np.concatenate([self.kp_input_min, [self.input_min[2]]])
             high = np.concatenate([self.kp_input_max, [self.input_max[2]]])
+        elif self.impedance_mode == "force":
+            limit = 5
+            low = -1 * np.array([limit for _ in range(6)])  # size of desired_wrench
+            high = -1 * low
         else:  # This is case "fixed"
             low, high = self.input_min, self.input_max
         return low, high
