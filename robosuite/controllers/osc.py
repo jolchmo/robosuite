@@ -246,7 +246,7 @@ class OperationalSpaceController(Controller):
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         elif self.impedance_mode == "variable_z":
             kp, delta_z = action[:6], action[-1]
-            self.kp = np.clip(kp, self.kp_min, self.kp_max)
+            self.kp = self.scale_kp(kp)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         else:   # This is case "fixed"
             delta = action
@@ -468,8 +468,8 @@ class OperationalSpaceController(Controller):
         elif self.impedance_mode == "tracking":
             low, high = self.kp_input_min, self.kp_input_max
         elif self.impedance_mode == "variable_z":
-            low = np.concatenate([self.kp_min, [self.input_min[2]]])
-            high = np.concatenate([self.kp_max, [self.input_max[2]]])
+            low = np.concatenate([self.kp_input_min, [self.input_min[2]]])
+            high = np.concatenate([self.kp_input_max, [self.input_max[2]]])
         else:  # This is case "fixed"
             low, high = self.input_min, self.input_max
         return low, high
