@@ -476,7 +476,7 @@ class OperationalSpaceController(Controller):
             low = np.concatenate([self.kp_input_min, [self.input_min[2]]])
             high = np.concatenate([self.kp_input_max, [self.input_max[2]]])
         elif self.impedance_mode == "force":
-            limit = 5
+            limit = 10
             low = -1 * np.array([limit for _ in range(6)])  # size of desired_wrench
             high = -1 * low
         else:  # This is case "fixed"
