@@ -69,6 +69,16 @@ class OperationalSpaceController(Controller):
             for the varying kp values. Can be either be a 2-list (same min / max for all kp action dims), or a 2-list
             of list (specific min / max for each kp dim)
 
+        kp_input_max (float or Iterable of float): Only applicable if @impedance_mode is set to either "tracking" or "variable_z" 
+            Maximum above which an inputted kp will be clipped. Can be either be
+            a scalar (same value for all kp gains), or a list (specific values for each dimension). If the
+            latter, dimension should be the same as the control dimension for this controller
+
+        kp_input_min (float or Iterable of float): Only applicable if @impedance_mode is set to either "tracking" or "variable_z"
+            Minimum below which an inputted kp will be clipped. Can be either be
+            a scalar (same value for all kp gains), or a list (specific values for each dimension). If the
+            latter, dimension should be the same as the control dimension for this controller
+
         damping_ratio_limits (2-list of float or 2-list of Iterable of floats): Only applicable if @impedance_mode is
             set to "variable". This sets the corresponding min / max ranges of the controller action space for the
             varying damping_ratio values. Can be either be a 2-list (same min / max for all damping_ratio action dims),
@@ -117,6 +127,8 @@ class OperationalSpaceController(Controller):
                  damping_ratio=1,
                  impedance_mode="fixed",
                  kp_limits=(0, 300),
+                 kp_input_max=300,
+                 kp_input_min=0,
                  damping_ratio_limits=(0, 100),
                  policy_freq=20,
                  position_limits=None,
@@ -162,10 +174,10 @@ class OperationalSpaceController(Controller):
         # kp and kd limits
         self.kp_min = self.nums2array(kp_limits[0], 6)
         self.kp_max = self.nums2array(kp_limits[1], 6)
+        self.kp_input_min = self.nums2array(kp_input_min, 6)
+        self.kp_input_max = self.nums2array(kp_input_max, 6)
         self.damping_ratio_min = self.nums2array(damping_ratio_limits[0], 6)
         self.damping_ratio_max = self.nums2array(damping_ratio_limits[1], 6)
-        self.kp_input_min = self.nums2array(0, 6)
-        self.kp_input_max = self.nums2array(1, 6)
 
         # Verify the proposed impedance mode is supported
         assert impedance_mode in IMPEDANCE_MODES, "Error: Tried to instantiate OSC controller for unsupported " \
