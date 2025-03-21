@@ -496,7 +496,7 @@ def postprocess_model_xml(xml_str):
         ind = max(
             loc for loc, val in enumerate(old_path_split) if val == "robosuite"
         )  # last occurrence index
-        new_path_split = path_split + old_path_split[ind + 1 :]
+        new_path_split = path_split + old_path_split[ind + 1:]
         new_path = "/".join(new_path_split)
         elem.set("file", new_path)
 
@@ -673,6 +673,8 @@ def _element_filter(element, parent):
     if parent is not None and parent.tag == "actuator":
         return "actuators"
     elif element.tag == "joint":
+        if element.get("type") == "hinge":
+            return "hinge_joints"
         # Make sure this is not a tendon (this should not have a "joint", "joint1", or "joint2" attribute specified)
         if element.get("joint") is None and element.get("joint1") is None:
             return "joints"
@@ -682,6 +684,8 @@ def _element_filter(element, parent):
             return "root_body"
         return "bodies"
     elif element.tag == "site":
+        if "site" in element.attrib:
+            return "tendon_sites"
         return "sites"
     elif element.tag in SENSOR_TYPES:
         return "sensors"

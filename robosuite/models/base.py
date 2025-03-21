@@ -505,13 +505,13 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
 
         # 针对tendon进行修改,需要那些type不是hinge的joint
         self._joints = [e.get("name") for e in self._elements.get(
-            "joints", []) if e.get("type") != "hinge"]
+            "joints", [])]
         self._actuators = [e.get("name")
                            for e in self._elements.get("actuators", [])]
 
         # 针对tendon进行修改，需要那些没有site属性的site（）
         self._sites = [e.get("name") for e in self._elements.get(
-            "sites", []) if "site" in e.attrib]
+            "sites", [])]
         self._sensors = [e.get("name")
                          for e in self._elements.get("sensors", [])]
         self._contact_geoms = [e.get("name")
