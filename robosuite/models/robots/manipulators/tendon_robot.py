@@ -3,7 +3,7 @@ from robosuite.models.robots.manipulators.manipulator_model import ManipulatorMo
 from robosuite.utils.mjcf_utils import xml_path_completion
 
 
-class TendonRobot(ManipulatorModel):
+class Tendon(ManipulatorModel):
     """
     UR5e is a sleek and elegant new robot created by Universal Robots
 

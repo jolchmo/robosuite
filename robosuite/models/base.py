@@ -495,7 +495,7 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
             "bodies" in self._elements else [self._elements["root_body"]]
         self._root_body = self._elements["root_body"].get("name")
         self._bodies = [e.get("name") for e in self._elements.get("bodies", [])]
-        self._joints = [e.get("name") for e in self._elements.get("joints", [])]
+        self._joints = [e.get("name") for e in self._elements.get("joints", []) if e.get("type") != "hinge"]
         self._actuators = [e.get("name") for e in self._elements.get("actuators", [])]
         self._sites = [e.get("name") for e in self._elements.get("sites", [])]
         self._sensors = [e.get("name") for e in self._elements.get("sensors", [])]
