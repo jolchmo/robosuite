@@ -5,7 +5,7 @@ import io
 
 import robosuite.utils.macros as macros
 from robosuite.utils import XMLError
-from robosuite.utils.mjcf_utils import find_elements, sort_elements,\
+from robosuite.utils.mjcf_utils import find_elements, sort_elements, \
     add_material, string_to_array, add_prefix, recolor_collision_geoms
 
 
@@ -89,10 +89,12 @@ class MujocoXML(object):
             others = [others]
         for idx, other in enumerate(others):
             if not isinstance(other, MujocoXML):
-                raise XMLError("{} is not a MujocoXML instance.".format(type(other)))
+                raise XMLError(
+                    "{} is not a MujocoXML instance.".format(type(other)))
             if merge_body is not None:
                 root = self.worldbody if merge_body == "default" else \
-                    find_elements(root=self.worldbody, tags="body", attribs={"name": merge_body}, return_first=True)
+                    find_elements(root=self.worldbody, tags="body", attribs={
+                                  "name": merge_body}, return_first=True)
                 for body in other.worldbody:
                     root.append(body)
             self.merge_assets(other)
@@ -257,6 +259,7 @@ class MujocoModel(object):
 
     Standardizes core API for accessing models' relevant geoms, names, etc.
     """
+
     def correct_naming(self, names):
         """
         Corrects all strings in @names by adding the naming prefix to it and returns the name-corrected values
@@ -278,7 +281,8 @@ class MujocoModel(object):
             return names
         else:
             # Assumed to be type error
-            raise TypeError("Error: type of 'names' must be str, list, or dict!")
+            raise TypeError(
+                "Error: type of 'names' must be str, list, or dict!")
 
     def set_sites_visibility(self, sim, visible):
         """
@@ -294,7 +298,8 @@ class MujocoModel(object):
             if (visible and sim.model.site_rgba[vis_g_id][3] < 0) or \
                     (not visible and sim.model.site_rgba[vis_g_id][3] > 0):
                 # We toggle the alpha value
-                sim.model.site_rgba[vis_g_id][3] = -sim.model.site_rgba[vis_g_id][3]
+                sim.model.site_rgba[vis_g_id][3] = - \
+                    sim.model.site_rgba[vis_g_id][3]
 
     def exclude_from_prefixing(self, inp):
         """
@@ -489,29 +494,45 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
         # Parse element tree to get all relevant bodies, joints, actuators, and geom groups
         self._elements = sort_elements(root=self.root)
         assert len(self._elements["root_body"]) == 1, "Invalid number of root bodies found for robot model. Expected 1," \
-                                                      "got {}".format(len(self._elements["root_body"]))
+                                                      "got {}".format(
+                                                          len(self._elements["root_body"]))
         self._elements["root_body"] = self._elements["root_body"][0]
         self._elements["bodies"] = [self._elements["root_body"]] + self._elements["bodies"] if \
             "bodies" in self._elements else [self._elements["root_body"]]
         self._root_body = self._elements["root_body"].get("name")
-        self._bodies = [e.get("name") for e in self._elements.get("bodies", [])]
-        self._joints = [e.get("name") for e in self._elements.get("joints", []) if e.get("type") != "hinge"]
-        self._actuators = [e.get("name") for e in self._elements.get("actuators", [])]
-        self._sites = [e.get("name") for e in self._elements.get("sites", [])]
-        self._sensors = [e.get("name") for e in self._elements.get("sensors", [])]
-        self._contact_geoms = [e.get("name") for e in self._elements.get("contact_geoms", [])]
-        self._visual_geoms = [e.get("name") for e in self._elements.get("visual_geoms", [])]
-        self._base_offset = string_to_array(self._elements["root_body"].get("pos", "0 0 0"))
+        self._bodies = [e.get("name")
+                        for e in self._elements.get("bodies", [])]
+
+        # 针对tendon进行修改,需要那些type不是hinge的joint
+        self._joints = [e.get("name") for e in self._elements.get(
+            "joints", []) if e.get("type") != "hinge"]
+        self._actuators = [e.get("name")
+                           for e in self._elements.get("actuators", [])]
+
+        # 针对tendon进行修改，需要那些没有site属性的site（）
+        self._sites = [e.get("name") for e in self._elements.get(
+            "sites", []) if "site" in e.attrib]
+        self._sensors = [e.get("name")
+                         for e in self._elements.get("sensors", [])]
+        self._contact_geoms = [e.get("name")
+                               for e in self._elements.get("contact_geoms", [])]
+        self._visual_geoms = [e.get("name")
+                              for e in self._elements.get("visual_geoms", [])]
+        self._base_offset = string_to_array(
+            self._elements["root_body"].get("pos", "0 0 0"))
 
         # Update all xml element prefixes
-        add_prefix(root=self.root, prefix=self.naming_prefix, exclude=self.exclude_from_prefixing)
+        add_prefix(root=self.root, prefix=self.naming_prefix,
+                   exclude=self.exclude_from_prefixing)
 
         # Recolor all collision geoms appropriately
-        recolor_collision_geoms(root=self.worldbody, rgba=self.contact_geom_rgba)
+        recolor_collision_geoms(root=self.worldbody,
+                                rgba=self.contact_geom_rgba)
 
         # Add default materials
         if macros.USING_INSTANCE_RANDOMIZATION:
-            tex_element, mat_element, _, used = add_material(root=self.worldbody, naming_prefix=self.naming_prefix)
+            tex_element, mat_element, _, used = add_material(
+                root=self.worldbody, naming_prefix=self.naming_prefix)
             # Only add if material / texture was actually used
             if used:
                 self.asset.append(tex_element)
@@ -651,4 +672,3 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
     @property
     def horizontal_radius(self):
         raise NotImplementedError
-

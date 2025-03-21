@@ -68,8 +68,10 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
         self.cameras = self.get_element_names(self.worldbody, "camera")
 
         # By default, set small frictionloss and armature values
-        self.set_joint_attribute(attrib="frictionloss", values=0.1 * np.ones(self.dof), force=False)
-        self.set_joint_attribute(attrib="damping", values=0.1 * np.ones(self.dof), force=False)
+        self.set_joint_attribute(
+            attrib="frictionloss", values=0.1 * np.ones(self.dof), force=False)
+        self.set_joint_attribute(
+            attrib="damping", values=0.1 * np.ones(self.dof), force=False)
         self.set_joint_attribute(attrib="armature",
                                  values=np.array([5.0 / (i + 1) for i in range(self.dof)]), force=False)
 
@@ -80,7 +82,8 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
         Args:
             pos (3-array): (x,y,z) position to place robot base
         """
-        self._elements["root_body"].set("pos", array_to_string(pos - self.bottom_offset))
+        self._elements["root_body"].set(
+            "pos", array_to_string(pos - self.bottom_offset))
 
     def set_base_ori(self, rot):
         """
@@ -90,7 +93,7 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
             rot (3-array): (r,p,y) euler angles specifying the orientation for the robot base
         """
         # xml quat assumes w,x,y,z so we need to convert to this format from outputted x,y,z,w format from fcn
-        rot = mat2quat(euler2mat(rot))[[3,0,1,2]]
+        rot = mat2quat(euler2mat(rot))[[3, 0, 1, 2]]
         self._elements["root_body"].set("quat", array_to_string(rot))
 
     def set_joint_attribute(self, attrib, values, force=True):
@@ -106,11 +109,22 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
         Raises:
             AssertionError: [Inconsistent dimension sizes]
         """
-        assert values.size == len(self._elements["joints"]), "Error setting joint attributes: " + \
-            "Values must be same size as joint dimension. Got {}, expected {}!".format(values.size, self.dof)
-        for i, joint in enumerate(self._elements["joints"]):
+        # dof由 len(self._joint)得到，在base 中我修改了_joint不要joint中带有hinge的
+        joint_list = [e for e in self._elements["joints"]
+                      if e.get("type") != "hinge"]
+        assert values.size == len(joint_list), "Error setting joint attributes: " + \
+            "Values must be same size as joint dimension. Got {}, expected {}!".format(
+                values.size, self.dof)
+        for i, joint in enumerate(joint_list):
             if force or joint.get(attrib, None) is None:
                 joint.set(attrib, array_to_string(np.array([values[i]])))
+
+        # assert values.size == len(self._elements["joints"]), "Error setting joint attributes: " + \
+        #     "Values must be same size as joint dimension. Got {}, expected {}!".format(
+        #         values.size, self.dof)
+        # for i, joint in enumerate(self._elements["joints"]):
+        #     if force or joint.get(attrib, None) is None:
+        #         joint.set(attrib, array_to_string(np.array([values[i]])))
 
     def add_mount(self, mount):
         """
