@@ -2,250 +2,251 @@
 	<!-- diy robosuite model -->
 	<!-- https://docs.google.com/document/d/1bSUKkpjmbKqWyV5Oc7_4VL4FGKAQZx8aWm_nvlmTVmE/edit?pli=1&tab=t.0 -->
     <actuator>
-	<motor name="ctrl_1" joint="ctrl_1" ctrlrange="-10 10" ctrllimited="true"/>
-	<motor name="ctrl_2" joint="ctrl_2" ctrlrange="-10 10" ctrllimited="true"/>
-	<motor name="ctrl_3" joint="ctrl_3" ctrlrange="-10 10" ctrllimited="true"/>
-	<motor name="ctrl_4" joint="ctrl_4" ctrlrange="-10 10" ctrllimited="true"/>
-	<motor name="ctrl_5" joint="ctrl_5" ctrlrange="-10 10" ctrllimited="true"/>
-	<motor name="ctrl_6" joint="ctrl_6" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j1" joint="joint_1" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j2" joint="joint_2" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j3" joint="joint_3" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j4" joint="joint_4" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j5" joint="joint_5" ctrlrange="-10 10" ctrllimited="true"/>
+	<motor name="torq_j6" joint="joint_6" ctrlrange="-10 10" ctrllimited="true"/>
     </actuator>
 
 	<asset>
-		<mesh name="base" file="./meshs/base.STL" scale="1 1 1"/>
-		<mesh name="s1" file="./meshs/s1.STL" scale="1 1 1"/>
-		<mesh name="s2" file="./meshs/s2.STL" scale="1 1 1"/>
-		<mesh name="s3" file="./meshs/s3.STL" scale="1 1 1"/>
-		<mesh name="s4" file="./meshs/s4.STL" scale="1 1 1"/>
-		<mesh name="s5" file="./meshs/s5.STL" scale="1 1 1"/>
-		<mesh name="s6" file="./meshs/s6.STL" scale="1 1 1"/>
-		<mesh name="s7" file="./meshs/s7.STL" scale="1 1 1"/>
-		<mesh name="s8" file="./meshs/s8.STL" scale="1 1 1"/>
-		<mesh name="s9" file="./meshs/s9.STL" scale="1 1 1"/>
-		<mesh name="s10" file="./meshs/s10.STL" scale="1 1 1"/>
+		<mesh name="base" file="./meshes/base.STL" scale="1 1 1"/>
+		<mesh name="s1" file="./meshes/s1.STL" scale="1 1 1"/>
+		<mesh name="s2" file="./meshes/s2.STL" scale="1 1 1"/>
+		<mesh name="s3" file="./meshes/s3.STL" scale="1 1 1"/>
+		<mesh name="s4" file="./meshes/s4.STL" scale="1 1 1"/>
+		<mesh name="s5" file="./meshes/s5.STL" scale="1 1 1"/>
+		<mesh name="s6" file="./meshes/s6.STL" scale="1 1 1"/>
+		<mesh name="s7" file="./meshes/s7.STL" scale="1 1 1"/>
+		<mesh name="s8" file="./meshes/s8.STL" scale="1 1 1"/>
+		<mesh name="s9" file="./meshes/s9.STL" scale="1 1 1"/>
+		<mesh name="s10" file="./meshes/s10.STL" scale="1 1 1"/>
 	</asset>
 
 
 
     <!-- <include file="tendon_scene.xml"/> -->
 
-    <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0.981 0 0"/>
+    <!-- <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 -0.981" /> -->
 
-    <!-- <size nconmax="300" njmax="1000" nstack="50000"/> -->
+    <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 0" />
+	<compiler inertiafromgeom='true' angle='degree'/>
+
 
     <worldbody>
-
-
-    <body name="base" pos="0 0 1" axisangle="0 1 0 90">
-      <geom mesh="base" pos="0 0 0"  type="mesh" density="1000"/>
-		<!-- robot view -->
-		<!-- Note: You may have to tune the robotview camera if there are any obstructions in the robot’s form factor blocking the camera -->
+    <body name="base" pos="0 0 0" axisangle="0 1 0 90">
+		<inertial diaginertia="0 0 0" mass="10" pos="0 0 0"/>
+		<geom mesh="base" pos="0 0 0"  type="mesh" density="1000"/>
+	<!-- robot view -->
+	<!-- Note: You may have to tune the robotview camera if there are any obstructions in the robot’s form factor blocking the camera -->
 		<camera mode="fixed" name="robotview" pos="1.0 0 0.4" quat="0.653 0.271 0.271 0.653"/>
-		<inertial diaginertia="0 0 0" mass="0" pos="0 0 0"/>
-		<!-- tendon for each wire -->
+	
+	
+	<!-- tendon for each wire -->
+	<body>
+		<geom type="sphere" pos="0.02028   0.00544 -0.1" size="0.005"/>
+		<joint name="joint_1" type="slide" axis="0 0 1" damping='2'  limited="true" range="-.1 .1"/>
+		<site name="end_1" pos="0.02028   0.00544 -0.1"/>
+	</body>
 
+	<body>
+		<geom type="sphere" pos="0.02028  -0.00544 -0.1" size="0.005"/>
+		<joint name="joint_2" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
+		<site name="end_2" pos="0.02028  -0.00544 -0.1"/>
+	</body>
 
+	<body >
+		<geom type="sphere" pos="-0.00544 -0.02028 -0.1" size="0.005"/>
+		<joint name="joint_3" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
+		<site name="end_3" pos="-0.00544 -0.02028 -0.1"/>
+	</body>
 
-		<!-- <site name="s_1_1" pos="0.02028   0.00544  -0.0000" size="0.002"/>
+	<body >
+		<geom type="sphere" pos="-0.01485 -0.01485 -0.1" size="0.005"/>
+		<joint name="joint_4" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
+		<site name="end_4" pos="-0.01485 -0.01485 -0.1"/>
+	</body>
+
+	<body >
+		<geom type="sphere" pos="-0.01485  0.01485 -0.1" size="0.005"/>
+		<joint name="joint_5" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
+		<site name="end_5" pos="-0.01485  0.01485 -0.1"/>
+	</body>
+
+	<body >
+		<geom type="sphere" pos="-0.00544  0.02028 -0.1" size="0.005"/>
+		<joint name="joint_6" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
+		<site name="end_6" pos="-0.00544  0.02028 -0.1"/>
+	</body>
+
+	<!-- tendon body geom -->
+	<body name="rope10">
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.025"/> -->
+		<geom type="sphere" pos="0 0 0.0000" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.0000" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.0000" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s1" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_1_1" pos="0.02028   0.00544  -0.0000" size="0.002"/>
 		<site name="s_1_2" pos="0.02028  -0.00544  -0.0000" size="0.002"/>
 		<site name="s_1_3" pos="-0.00544 -0.02028  -0.0000" size="0.002"/>
 		<site name="s_1_4" pos="-0.01485 -0.01485  -0.0000" size="0.002"/>
 		<site name="s_1_5" pos="-0.01485  0.01485  -0.0000" size="0.002"/>
-		<site name="s_1_6" pos="-0.00544  0.02028  -0.0000" size="0.002"/>	 -->
+		<site name="s_1_6" pos="-0.00544  0.02028  -0.0000" size="0.002"/>		
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.070"/> -->
+		<geom type="sphere" pos="0 0 0.050" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.050" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.050" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s2" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_2_1" pos="0.02028   0.00544  0.0500" size="0.002"/>
+		<site name="s_2_2" pos="0.02028  -0.00544  0.0500" size="0.002"/>
+		<site name="s_2_3" pos="-0.00544 -0.02028  0.0500" size="0.002"/>
+		<site name="s_2_4" pos="-0.01485 -0.01485  0.0500" size="0.002"/>
+		<site name="s_2_5" pos="-0.01485  0.01485  0.0500" size="0.002"/>
+		<site name="s_2_6" pos="-0.00544  0.02028  0.0500" size="0.002"/>
+		
+		
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.125"/> -->
+		<geom type="sphere" pos="0 0 0.100" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.100" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.100" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s3" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_3_1" pos="0.02028   0.00544  0.1000" size="0.002"/>
+		<site name="s_3_2" pos="0.02028  -0.00544  0.1000" size="0.002"/>
+		<site name="s_3_3" pos="-0.00544 -0.02028  0.1000" size="0.002"/>
+		<site name="s_3_4" pos="-0.01485 -0.01485  0.1000" size="0.002"/>
+		<site name="s_3_5" pos="-0.01485  0.01485  0.1000" size="0.002"/>
+		<site name="s_3_6" pos="-0.00544  0.02028  0.1000" size="0.002"/>
+		
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.175"/> -->
+		<geom type="sphere" pos="0 0 0.150" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.150" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.150" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s4" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_4_1" pos="0.02028   0.00544  0.1500" size="0.002"/>
+		<site name="s_4_2" pos="0.02028  -0.00544  0.1500" size="0.002"/>
+		<site name="s_4_3" pos="-0.00544 -0.02028  0.1500" size="0.002"/>
+		<site name="s_4_4" pos="-0.01485 -0.01485  0.1500" size="0.002"/>
+		<site name="s_4_5" pos="-0.01485  0.01485  0.1500" size="0.002"/>
+		<site name="s_4_6" pos="-0.00544  0.02028  0.1500" size="0.002"/>
+		
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.225"/> -->
+		<geom type="sphere" pos="0 0 0.200" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.200" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.200" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s5" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_5_1" pos="0.02028   0.00544  0.2000" size="0.002"/>
+		<site name="s_5_2" pos="0.02028  -0.00544  0.2000" size="0.002"/>
+		<site name="s_5_3" pos="-0.00544 -0.02028  0.2000" size="0.002"/>
+		<site name="s_5_4" pos="-0.01485 -0.01485  0.2000" size="0.002"/>
+		<site name="s_5_5" pos="-0.01485  0.01485  0.2000" size="0.002"/>
+		<site name="s_5_6" pos="-0.00544  0.02028  0.2000" size="0.002"/>
+		
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.275"/> -->
+		<geom type="sphere" pos="0 0 0.250" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.250" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.250" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s6" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_6_1" pos="0.02028   0.00544  0.2500" size="0.002"/>
+		<site name="s_6_2" pos="0.02028  -0.00544  0.2500" size="0.002"/>
+		<site name="s_6_3" pos="-0.00544 -0.02028  0.2500" size="0.002"/>
+		<site name="s_6_4" pos="-0.01485 -0.01485  0.2500" size="0.002"/>
+		<site name="s_6_5" pos="-0.01485  0.01485  0.2500" size="0.002"/>
+		<site name="s_6_6" pos="-0.00544  0.02028  0.2500" size="0.002"/>
+
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.325"/> -->
+		<geom type="sphere" pos="0 0 0.300" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.300" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.300" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s7" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_7_1" pos="0.02028   0.00544  0.3000" size="0.002"/>
+		<site name="s_7_2" pos="0.02028  -0.00544  0.3000" size="0.002"/>
+		<site name="s_7_3" pos="-0.00544 -0.02028  0.3000" size="0.002"/>
+		<site name="s_7_4" pos="-0.01485 -0.01485  0.3000" size="0.002"/>
+		<site name="s_7_5" pos="-0.01485  0.01485  0.3000" size="0.002"/>
+		<site name="s_7_6" pos="-0.00544  0.02028  0.3000" size="0.002"/>
 
 
 		<body>
-            <geom type="sphere" pos="0.02028   0.00544 -0.1" size="0.005"/>
-            <joint name="ctrl_1" type="slide" axis="0 0 1" damping='2'  limited="true" range="-.1 .1"/>
-            <site name="end_1" pos="0.02028   0.00544 -0.1"/>
-        </body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.375"/> -->
+		<geom type="sphere" pos="0 0 0.350" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.350" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.350" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s8" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_8_1" pos="0.02028   0.00544  0.3500" size="0.002"/>
+		<site name="s_8_2" pos="0.02028  -0.00544  0.3500" size="0.002"/>
+		<site name="s_8_3" pos="-0.00544 -0.02028  0.3500" size="0.002"/>
+		<site name="s_8_4" pos="-0.01485 -0.01485  0.3500" size="0.002"/>
+		<site name="s_8_5" pos="-0.01485  0.01485  0.3500" size="0.002"/>
+		<site name="s_8_6" pos="-0.00544  0.02028  0.3500" size="0.002"/>
+
 
 		<body>
-            <geom type="sphere" pos="0.02028  -0.00544 -0.1" size="0.005"/>
-            <joint name="ctrl_2" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
-            <site name="end_2" pos="0.02028  -0.00544 -0.1"/>
-        </body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.425"/> -->
+		<geom type="sphere" pos="0 0 0.400" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.400" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.400" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s9" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_9_1" pos="0.02028   0.00544  0.4000" size="0.002"/>
+		<site name="s_9_2" pos="0.02028  -0.00544  0.4000" size="0.002"/>
+		<site name="s_9_3" pos="-0.00544 -0.02028  0.4000" size="0.002"/>
+		<site name="s_9_4" pos="-0.01485 -0.01485  0.4000" size="0.002"/>
+		<site name="s_9_5" pos="-0.01485  0.01485  0.4000" size="0.002"/>
+		<site name="s_9_6" pos="-0.00544  0.02028  0.4000" size="0.002"/>
 
-		<body >
-            <geom type="sphere" pos="-0.00544 -0.02028 -0.1" size="0.005"/>
-            <joint name="ctrl_3" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
-            <site name="end_3" pos="-0.00544 -0.02028 -0.1"/>
-        </body>
+		<body>
+		<!-- <inertial diaginertia="0.1 0.1 0.1" mass="1" pos="0 0 0.475"/> -->
+		<geom type="sphere" pos="0 0 0.450" size="0.005"  rgba=".8 .2 .1 1"/>
+		<joint type="hinge" pos="0 0 0.450" axis="1 0 0"  damping="1.0000" stiffness="0.50"/>
+		<joint type="hinge" pos="0 0 0.450" axis="0 1 0"  damping="1.0000" stiffness="0.50"/>
+		<geom mesh="s10" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
+		<site name="s_10_1" pos="0.02028   0.00544  0.4500" size="0.002"/>
+		<site name="s_10_2" pos="0.02028  -0.00544  0.4500" size="0.002"/>
+		<site name="s_10_3" pos="-0.00544 -0.02028  0.4500" size="0.002"/>
+		<site name="s_10_4" pos="-0.01485 -0.01485  0.4500" size="0.002"/>
+		<site name="s_10_5" pos="-0.01485  0.01485  0.4500" size="0.002"/>
+		<site name="s_10_6" pos="-0.00544  0.02028  0.4500" size="0.002"/>
 
-		<body >
-            <geom type="sphere" pos="-0.01485 -0.01485 -0.1" size="0.005"/>
-            <joint name="ctrl_4" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
-            <site name="end_4" pos="-0.01485 -0.01485 -0.1"/>
-        </body>
-
-		<body >
-            <geom type="sphere" pos="-0.01485  0.01485 -0.1" size="0.005"/>
-            <joint name="ctrl_5" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
-            <site name="end_5" pos="-0.01485  0.01485 -0.1"/>
-        </body>
-
-		<body >
-            <geom type="sphere" pos="-0.00544  0.02028 -0.1" size="0.005"/>
-            <joint name="ctrl_6" type="slide" axis="0 0 1" damping='2' limited="true" range="-.1 .1"/>
-            <site name="end_6" pos="-0.00544  0.02028 -0.1"/>
-        </body>
-
-		<!-- tendon body geom -->
-		<body name="rope10">
-			<body>
-			<geom type="sphere" pos="0 0 0.0000" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.0000" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.0000" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s1" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_1_1" pos="0.02028   0.00544  -0.0000" size="0.002"/>
-			<site name="s_1_2" pos="0.02028  -0.00544  -0.0000" size="0.002"/>
-			<site name="s_1_3" pos="-0.00544 -0.02028  -0.0000" size="0.002"/>
-			<site name="s_1_4" pos="-0.01485 -0.01485  -0.0000" size="0.002"/>
-			<site name="s_1_5" pos="-0.01485  0.01485  -0.0000" size="0.002"/>
-			<site name="s_1_6" pos="-0.00544  0.02028  -0.0000" size="0.002"/>		
-			<body>
-			<geom type="sphere" pos="0 0 0.050" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.050" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.050" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s2" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_2_1" pos="0.02028   0.00544  0.0500" size="0.002"/>
-			<site name="s_2_2" pos="0.02028  -0.00544  0.0500" size="0.002"/>
-			<site name="s_2_3" pos="-0.00544 -0.02028  0.0500" size="0.002"/>
-			<site name="s_2_4" pos="-0.01485 -0.01485  0.0500" size="0.002"/>
-			<site name="s_2_5" pos="-0.01485  0.01485  0.0500" size="0.002"/>
-			<site name="s_2_6" pos="-0.00544  0.02028  0.0500" size="0.002"/>
-			
-			
-			<body>
-			<geom type="sphere" pos="0 0 0.100" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.100" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.100" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s3" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_3_1" pos="0.02028   0.00544  0.1000" size="0.002"/>
-			<site name="s_3_2" pos="0.02028  -0.00544  0.1000" size="0.002"/>
-			<site name="s_3_3" pos="-0.00544 -0.02028  0.1000" size="0.002"/>
-			<site name="s_3_4" pos="-0.01485 -0.01485  0.1000" size="0.002"/>
-			<site name="s_3_5" pos="-0.01485  0.01485  0.1000" size="0.002"/>
-			<site name="s_3_6" pos="-0.00544  0.02028  0.1000" size="0.002"/>
-			
-			<body>
-			<geom type="sphere" pos="0 0 0.150" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.150" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.150" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s4" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_4_1" pos="0.02028   0.00544  0.1500" size="0.002"/>
-			<site name="s_4_2" pos="0.02028  -0.00544  0.1500" size="0.002"/>
-			<site name="s_4_3" pos="-0.00544 -0.02028  0.1500" size="0.002"/>
-			<site name="s_4_4" pos="-0.01485 -0.01485  0.1500" size="0.002"/>
-			<site name="s_4_5" pos="-0.01485  0.01485  0.1500" size="0.002"/>
-			<site name="s_4_6" pos="-0.00544  0.02028  0.1500" size="0.002"/>
-			
-			<body>
-			<geom type="sphere" pos="0 0 0.200" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.200" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.200" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s5" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_5_1" pos="0.02028   0.00544  0.2000" size="0.002"/>
-			<site name="s_5_2" pos="0.02028  -0.00544  0.2000" size="0.002"/>
-			<site name="s_5_3" pos="-0.00544 -0.02028  0.2000" size="0.002"/>
-			<site name="s_5_4" pos="-0.01485 -0.01485  0.2000" size="0.002"/>
-			<site name="s_5_5" pos="-0.01485  0.01485  0.2000" size="0.002"/>
-			<site name="s_5_6" pos="-0.00544  0.02028  0.2000" size="0.002"/>
-			
-			<body>
-			<geom type="sphere" pos="0 0 0.250" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.250" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.250" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s6" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_6_1" pos="0.02028   0.00544  0.2500" size="0.002"/>
-			<site name="s_6_2" pos="0.02028  -0.00544  0.2500" size="0.002"/>
-			<site name="s_6_3" pos="-0.00544 -0.02028  0.2500" size="0.002"/>
-			<site name="s_6_4" pos="-0.01485 -0.01485  0.2500" size="0.002"/>
-			<site name="s_6_5" pos="-0.01485  0.01485  0.2500" size="0.002"/>
-			<site name="s_6_6" pos="-0.00544  0.02028  0.2500" size="0.002"/>
-
-			<body>
-			<geom type="sphere" pos="0 0 0.300" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.300" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.300" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s7" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_7_1" pos="0.02028   0.00544  0.3000" size="0.002"/>
-			<site name="s_7_2" pos="0.02028  -0.00544  0.3000" size="0.002"/>
-			<site name="s_7_3" pos="-0.00544 -0.02028  0.3000" size="0.002"/>
-			<site name="s_7_4" pos="-0.01485 -0.01485  0.3000" size="0.002"/>
-			<site name="s_7_5" pos="-0.01485  0.01485  0.3000" size="0.002"/>
-			<site name="s_7_6" pos="-0.00544  0.02028  0.3000" size="0.002"/>
-
-
-			<body>
-			<geom type="sphere" pos="0 0 0.350" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.350" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.350" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s8" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_8_1" pos="0.02028   0.00544  0.3500" size="0.002"/>
-			<site name="s_8_2" pos="0.02028  -0.00544  0.3500" size="0.002"/>
-			<site name="s_8_3" pos="-0.00544 -0.02028  0.3500" size="0.002"/>
-			<site name="s_8_4" pos="-0.01485 -0.01485  0.3500" size="0.002"/>
-			<site name="s_8_5" pos="-0.01485  0.01485  0.3500" size="0.002"/>
-			<site name="s_8_6" pos="-0.00544  0.02028  0.3500" size="0.002"/>
-
-
-			<body>
-			<geom type="sphere" pos="0 0 0.400" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.400" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.400" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s9" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_9_1" pos="0.02028   0.00544  0.4000" size="0.002"/>
-			<site name="s_9_2" pos="0.02028  -0.00544  0.4000" size="0.002"/>
-			<site name="s_9_3" pos="-0.00544 -0.02028  0.4000" size="0.002"/>
-			<site name="s_9_4" pos="-0.01485 -0.01485  0.4000" size="0.002"/>
-			<site name="s_9_5" pos="-0.01485  0.01485  0.4000" size="0.002"/>
-			<site name="s_9_6" pos="-0.00544  0.02028  0.4000" size="0.002"/>
-
-			<body>
-			<geom type="sphere" pos="0 0 0.450" size="0.005" rgba=".8 .2 .1 1"/>
-			<joint type="hinge" pos="0 0 0.450" axis="1 0 0"  damping="1" stiffness="1.00"/>
-			<joint type="hinge" pos="0 0 0.450" axis="0 1 0"  damping="1" stiffness="1.00"/>
-			<geom mesh="s10" pos="0 0.0000 0.0000" type="mesh" density="1000"/>
-			<site name="s_10_1" pos="0.02028   0.00544  0.4500" size="0.002"/>
-			<site name="s_10_2" pos="0.02028  -0.00544  0.4500" size="0.002"/>
-			<site name="s_10_3" pos="-0.00544 -0.02028  0.4500" size="0.002"/>
-			<site name="s_10_4" pos="-0.01485 -0.01485  0.4500" size="0.002"/>
-			<site name="s_10_5" pos="-0.01485  0.01485  0.4500" size="0.002"/>
-			<site name="s_10_6" pos="-0.00544  0.02028  0.4500" size="0.002"/>
-
-			
-			<!-- virtual hand  -->
-			<!-- pos ,quat should be algin to the real robot -->
-			<body name="right_hand" pos="0 0 0.0" quat="0 0 0 1">
-				<!-- This sites were added for visualization. They are all standardized between models-->
-				<!-- Position mimics the gripper attachment point (right_hand) -->
-				<!--  Y-axis should be perpendicular to grasping motion, and Z-axis should point out of the robot eef -->
-				<site name="ee" pos="0 0 0" size="0.01 0.01 0.01" rgba="0 0 1 1" type="sphere" group="1"/>
-				<site name="ee_x" pos="0 0 0" size="0.005 .1"  quat="0.707105 0.707108 0 0 " rgba="1 0 0 0" type="cylinder" group="1"/>
-				<site name="ee_z" pos="0 0 0" size="0.005 .1" quat="0.707105 0 0 0.707108" rgba="0 0 1 0" type="cylinder" group="1"/>
-				<site name="ee_y" pos="0 0 0" size="0.005 .1" quat="0.707105 0 0.707108 0 " rgba="0 1 0 0" type="cylinder" group="1"/>
-				<!-- This camera points out from the eef. -->
-				<camera mode="fixed" name="eye_in_hand" pos="0.05 0 0" quat="0 0.707108 0.707108 0" fovy="75"/>
-				<!-- To add gripper -->
-				</body>
+		
+		<!-- virtual hand  -->
+		<!-- pos ,quat should be algin to the real robot -->
+		<body name="right_hand" pos="0 0 0.0" quat="0 0 0 1">
+			<!-- This sites were added for visualization. They are all standardized between models-->
+			<!-- Position mimics the gripper attachment point (right_hand) -->
+			<!--  Y-axis should be perpendicular to grasping motion, and Z-axis should point out of the robot eef -->
+			<site name="ee" pos="0 0 0" size="0.01 0.01 0.01" rgba="0 0 1 1" type="sphere" group="1"/>
+			<site name="ee_x" pos="0 0 0" size="0.005 .1"  quat="0.707105 0.707108 0 0 " rgba="1 0 0 0" type="cylinder" group="1"/>
+			<site name="ee_z" pos="0 0 0" size="0.005 .1" quat="0.707105 0 0 0.707108" rgba="0 0 1 0" type="cylinder" group="1"/>
+			<site name="ee_y" pos="0 0 0" size="0.005 .1" quat="0.707105 0 0.707108 0 " rgba="0 1 0 0" type="cylinder" group="1"/>
+			<!-- This camera points out from the eef. -->
+			<camera mode="fixed" name="eye_in_hand" pos="0.05 0 0" quat="0 0.707108 0.707108 0" fovy="75"/>
+			<!-- To add gripper -->
 			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
-			</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
+		</body>
 	</body>
 
     </worldbody>
 	
     <tendon>
 	
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_1"/>
 		<site site="s_1_1"/>
 		<site site="s_2_1"/>
@@ -260,7 +261,7 @@
 		<!-- <site site="s_11_1"/> -->
         </spatial>
 
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_2"/>
 		<site site="s_1_2"/>
 		<site site="s_2_2"/>
@@ -276,7 +277,7 @@
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_3"/>
 		<site site="s_1_3"/>
 		<site site="s_2_3"/>
@@ -292,7 +293,7 @@
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_4"/>
 		<site site="s_1_4"/>
 		<site site="s_2_4"/>
@@ -307,7 +308,7 @@
 		<!-- <site site="s_11_4"/> -->
         </spatial>
 
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_5"/>
 		<site site="s_1_5"/>
 		<site site="s_2_5"/>
@@ -323,7 +324,7 @@
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="1 2">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_6"/>
 		<site site="s_1_6"/>
 		<site site="s_2_6"/>

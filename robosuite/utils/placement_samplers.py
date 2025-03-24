@@ -310,6 +310,7 @@ class SequentialCompositeSampler(ObjectPositionSampler):
     Args:
         name (str): Name of this sampler.
     """
+
     def __init__(self, name):
         # Samplers / args will be filled in later
         self.samplers = collections.OrderedDict()
