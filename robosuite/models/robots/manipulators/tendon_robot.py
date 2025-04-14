@@ -1,3 +1,4 @@
+
 import numpy as np
 from robosuite.models.robots.manipulators.manipulator_model import ManipulatorModel
 from robosuite.utils.mjcf_utils import xml_path_completion
@@ -16,11 +17,11 @@ class Tendon(ManipulatorModel):
 
     @property
     def default_mount(self):
-        return "RethinkMount"
+        return None
 
     @property
     def default_gripper(self):
-        return "Robotiq85Gripper"
+        return None
 
     @property
     def default_controller_config(self):
@@ -33,14 +34,13 @@ class Tendon(ManipulatorModel):
     @property
     def base_xpos_offset(self):
         return {
-            "bins": (0, 0, 0),
-            "empty": (0, 0, 0),
-            "table": lambda table_length: (-0.16 - table_length/2, 0, 0)
+            # 按需修改
+            "table": lambda table_length: (-table_length/3, 0, table_length+0.5)
         }
 
     @property
     def top_offset(self):
-        return np.array((0, 0, 1.0))
+        return np.array((0, 0, 0))
 
     @property
     def _horizontal_radius(self):

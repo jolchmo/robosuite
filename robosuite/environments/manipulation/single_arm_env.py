@@ -9,6 +9,7 @@ class SingleArmEnv(ManipulationEnv):
     """
     A manipulation environment intended for a single robot arm.
     """
+
     def _load_model(self):
         """
         Verifies correct robot model is loaded
@@ -51,6 +52,7 @@ class SingleArmEnv(ManipulationEnv):
             np.array: (3,3) End Effector orientation matrix
         """
         pf = self.robots[0].robot_model.naming_prefix
+        # pf is the prefix for the robot, e.g. "robot0_"
         if self.env_configuration == "bimanual":
             return np.array(self.sim.data.site_xmat[self.sim.model.site_name2id(pf + "right_ee")]).reshape(3, 3)
         else:
