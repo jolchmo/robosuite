@@ -119,12 +119,12 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
             if force or joint.get(attrib, None) is None:
                 joint.set(attrib, array_to_string(np.array([values[i]])))
 
-        # assert values.size == len(self._elements["joints"]), "Error setting joint attributes: " + \
-        #     "Values must be same size as joint dimension. Got {}, expected {}!".format(
-        #         values.size, self.dof)
-        # for i, joint in enumerate(self._elements["joints"]):
-        #     if force or joint.get(attrib, None) is None:
-        #         joint.set(attrib, array_to_string(np.array([values[i]])))
+        assert values.size == len(self._elements["joints"]), "Error setting joint attributes: " + \
+            "Values must be same size as joint dimension. Got {}, expected {}!".format(
+                values.size, self.dof)
+        for i, joint in enumerate(self._elements["joints"]):
+            if force or joint.get(attrib, None) is None:
+                joint.set(attrib, array_to_string(np.array([values[i]])))
 
     def add_mount(self, mount):
         """

@@ -126,7 +126,7 @@ class SingleArm(Manipulator):
             "joints": self.joint_indexes,
             "qpos": self._ref_joint_pos_indexes,
             "qvel": self._ref_joint_vel_indexes
-                                              }
+        }
         self.controller_config["actuator_range"] = self.torque_limits
         self.controller_config["policy_freq"] = self.control_freq
         self.controller_config["ndim"] = len(self.robot_joints)

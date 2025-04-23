@@ -378,9 +378,10 @@ class MujocoEnv(metaclass=EnvMeta):
 
         # Loop through the simulation at the model timestep rate until we're ready to take the next policy step
         # (as defined by the control frequency specified at the environment level)
+        # control timestep是0.05，仿真timestep是0.002，说明模型输出一次动作仿真器应该要仿真25个step
         for i in range(int(self.control_timestep / self.model_timestep)):
-            self.sim.forward()
             self._pre_action(action, policy_step)
+            self.sim.forward()
             self.sim.step()
             self._update_observables()
             policy_step = False
@@ -574,7 +575,7 @@ class MujocoEnv(metaclass=EnvMeta):
         Args:
             observable (Observable): Observable instance.
         """
-        assert observable.name not in self._observables,\
+        assert observable.name not in self._observables, \
             "Observable name {} is already associated with an existing observable! Use modify_observable(...) " \
             "to modify a pre-existing observable.".format(observable.name)
         self._observables[observable.name] = observable
