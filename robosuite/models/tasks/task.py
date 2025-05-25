@@ -23,9 +23,9 @@ class Task(MujocoWorldBase):
     """
 
     def __init__(
-        self, 
-        mujoco_arena, 
-        mujoco_robots, 
+        self,
+        mujoco_arena,
+        mujoco_robots,
         mujoco_objects=None,
     ):
         super().__init__()

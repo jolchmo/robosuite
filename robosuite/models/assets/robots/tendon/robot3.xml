@@ -4,12 +4,12 @@
 	<!-- diy robosuite model -->
 	<!-- https://docs.google.com/document/d/1bSUKkpjmbKqWyV5Oc7_4VL4FGKAQZx8aWm_nvlmTVmE/edit?pli=1&tab=t.0 -->
     <actuator>
-	<motor name="torq_j1" joint="joint_1" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
-	<motor name="torq_j2" joint="joint_2" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
-	<motor name="torq_j3" joint="joint_3" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
-	<motor name="torq_j4" joint="joint_4" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
-	<motor name="torq_j5" joint="joint_5" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
-	<motor name="torq_j6" joint="joint_6" ctrlrange="0 1" ctrllimited="true" gear="20 0"/>
+	<motor name="torq_j1" joint="joint_1" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
+	<motor name="torq_j2" joint="joint_2" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
+	<motor name="torq_j3" joint="joint_3" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
+	<motor name="torq_j4" joint="joint_4" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
+	<motor name="torq_j5" joint="joint_5" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
+	<motor name="torq_j6" joint="joint_6" ctrlrange="0 1" ctrllimited="true" gear="10 0"/>
     </actuator>
 
 
@@ -25,38 +25,25 @@
 		<mesh name="s8" file="./meshes/s1.STL" scale="1 1 1"/>
 		<mesh name="s9" file="./meshes/s1.STL" scale="1 1 1"/>
 		<mesh name="s10" file="./meshes/s1.STL" scale="1 1 1"/>
-		<!-- <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="512" />
-        <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512" mark="cross" markrgb=".8 .8 .8" />
-        <material name="matplane" reflectance="0.3" texture="texplane" texrepeat="1 1" texuniform="true" /> -->
+
 	</asset>
 
 
 
+    <!-- <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 -0.981" /> -->
 
-
-    <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 -0.981" /> 
-
-    <!-- <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 0"/> -->
+    <option timestep="0.002" tolerance="1e-10" jacobian="dense" gravity="0 0 0" />
 
 
     <worldbody>
-		<camera mode="fixed"  name="default_camera" pos="-0.275 -1.079 1.497" xyaxes="0.998 0.068 -0.000 0.002 -0.024 1.000"/>
-		<!-- <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5.0" dir="0 0 -1" castshadow="false" />
-        <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1" />
+		<site name="waypoint" type="sphere" size="0.005" pos="-1 -1 -1" rgba=".8 .8 .8 1" />
 
-        <geom name="floor" pos="0 0 0" size="15 15 1" type="plane" material="matplane" margin="0.001" condim="3" friction="1 0.005 0.0001" />  -->
-		<site name="waypoint" type="sphere" size="0.001" pos="-1 -1 -1" rgba=".8 .8 .8 1" />
-
-
-
-    	<body name="base" pos="-0.39 0.0 1.47" quat="0.0 0.70711 0.0 0.70711">
+    	<body name="base" pos="0 0 0">
 			<!-- robot view -->
-			
-			<camera mode="fixed"  pos="-0.25 -0.6 0.2" quat="0.61237244 0.35355339 -0.61237244 0.35355339"/>
+			<camera mode="fixed" name="robotview" pos="-0.25 -0.6 0.2" quat="0.61237244 0.35355339 -0.61237244 0.35355339"/>
 			<!-- base mesh and visual -->
 			<geom mesh="base" pos="0.0000 0.0000 0.0000" density="0.1" type="mesh" group="1" />
-
-			<inertial diaginertia="0 0 0" mass="100" pos="0.05 0  -0.1"/>
+			<!-- <inertial diaginertia="0 0 0" mass="100" pos="0.05 0  -0.1"/> -->
 
 			<!-- tendon for each wire -->
 			<body>
@@ -230,16 +217,16 @@
 			<site name="s_10_5" pos="-0.01485  0.01485  0.4500" size="0.002"/>
 			<site name="s_10_6" pos="-0.00544  0.02028  0.4500" size="0.002"/>
 
-
+			
 			<!-- virtual hand  -->
 			<!-- pos ,quat should be algin to the real robot -->
 			<body name="right_hand" pos="0 0 0.50" quat="1 0 0 0">			
-				<geom type="sphere" pos="0 0 0.50" size="0.005"  rgba=".8 .2 .1 1"/>
+				<geom type="sphere" pos="0 0 0.0" size="0.005"  rgba=".8 .2 .1 1"/>
 
 				<!-- This sites were added for visualization. They are all standardized between models-->
 				<!-- Position mimics the gripper attachment point (right_hand) -->
 				<!--  Y-axis should be perpendicular to grasping motion, and Z-axis should point out of the robot eef -->
-				<site name="ee" pos="0 0 0" size="0.01 0.01 0.01" rgba="0 0 1 1" type="sphere" group="1"/>
+				<site name="ee" pos="0 0 0" size="0.001 0.001 0.001" rgba="0 0 1 1" type="sphere" group="1"/>
 				<site name="ee_x" pos="0 0 0" size="0.005 .1"  rgba="1 0 0 0" type="cylinder" group="1"/>
 				<site name="ee_z" pos="0 0 0" size="0.005 .1"  rgba="0 0 1 0" type="cylinder" group="1"/>
 				<site name="ee_y" pos="0 0 0" size="0.005 .1"  rgba="0 1 0 0" type="cylinder" group="1"/>
@@ -261,16 +248,24 @@
 		</worldbody>
 	
     <tendon>
-		<spatial width="0.002" limited="true" range="0.20 0.30">
+	
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_1"/>
 		<site site="s_1_1"/>
 		<site site="s_2_1"/>
 		<site site="s_3_1"/>
 		<site site="s_4_1"/>
 		<site site="s_5_1"/>
+		<site site="s_6_1"/>
+		<site site="s_7_1"/>
+		<site site="s_8_1"/>
+		<site site="s_9_1"/>
+		<site site="s_10_1"/>
+		
+		<!-- <site site="s_11_1"/> -->
         </spatial>
 
-		<spatial width="0.002" limited="true" range="0.46 0.56">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_2"/>
 		<site site="s_1_2"/>
 		<site site="s_2_2"/>
@@ -282,27 +277,29 @@
 		<site site="s_8_2"/>
 		<site site="s_9_2"/>
 		<site site="s_10_2"/>
+		
+		<!-- <site site="s_11_2"/> -->
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="0.20 0.30">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_3"/>
 		<site site="s_1_3"/>
 		<site site="s_2_3"/>
 		<site site="s_3_3"/>
 		<site site="s_4_3"/>
 		<site site="s_5_3"/>
-		<!-- <site site="s_6_3"/>
+		<site site="s_6_3"/>
 		<site site="s_7_3"/>
 		<site site="s_8_3"/>
 		<site site="s_9_3"/>
-		<site site="s_10_3"/> -->
+		<site site="s_10_3"/>
 		
 		<!-- <site site="s_11_3"/> -->
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="0.46 0.56">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_4"/>
 		<site site="s_1_4"/>
 		<site site="s_2_4"/>
@@ -318,24 +315,24 @@
 		<!-- <site site="s_11_4"/> -->
         </spatial>
 
-		<spatial width="0.002" limited="true" range="0.20 0.30">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_5"/>
 		<site site="s_1_5"/>
 		<site site="s_2_5"/>
 		<site site="s_3_5"/>
 		<site site="s_4_5"/>
 		<site site="s_5_5"/>
-		<!-- <site site="s_6_5"/>
+		<site site="s_6_5"/>
 		<site site="s_7_5"/>
 		<site site="s_8_5"/>
 		<site site="s_9_5"/>
-		<site site="s_10_5"/> -->
+		<site site="s_10_5"/>
 		
 		<!-- <site site="s_11_5"/> -->
         </spatial>
 
 
-		<spatial width="0.002" limited="true" range="0.46 0.56">
+		<spatial width="0.002" limited="true" range="0.45 0.55">
 		<site site="end_6"/>
 		<site site="s_1_6"/>
 		<site site="s_2_6"/>

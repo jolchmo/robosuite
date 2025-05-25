@@ -68,12 +68,16 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
         self.cameras = self.get_element_names(self.worldbody, "camera")
 
         # By default, set small frictionloss and armature values
-        self.set_joint_attribute(
-            attrib="frictionloss", values=0.1 * np.ones(self.dof), force=False)
-        self.set_joint_attribute(
-            attrib="damping", values=0.1 * np.ones(self.dof), force=False)
-        self.set_joint_attribute(attrib="armature",
-                                 values=np.array([5.0 / (i + 1) for i in range(self.dof)]), force=False)
+        # 修改：后面再考虑加入摩擦等因素。
+        if self.__class__.__name__ == "Tendon":
+            pass
+        else:
+            self.set_joint_attribute(
+                attrib="frictionloss", values=0.1 * np.ones(self.dof), force=False)
+            self.set_joint_attribute(
+                attrib="damping", values=0.1 * np.ones(self.dof), force=False)
+            self.set_joint_attribute(attrib="armature",
+                                     values=np.array([5.0 / (i + 1) for i in range(self.dof)]), force=False)
 
     def set_base_xpos(self, pos):
         """
@@ -94,6 +98,16 @@ class RobotModel(MujocoXMLModel, metaclass=RobotModelMeta):
         """
         # xml quat assumes w,x,y,z so we need to convert to this format from outputted x,y,z,w format from fcn
         rot = mat2quat(euler2mat(rot))[[3, 0, 1, 2]]
+        self._elements["root_body"].set("quat", array_to_string(rot))
+
+    def set_base_quat(self, rot):
+        """
+        Rotates robot by rotation @rot from its original orientation.
+
+        Args:
+            rot (3-array): (r,p,y) euler angles specifying the orientation for the robot base
+        """
+        # xml quat assumes w,x,y,z so we need to convert to this format from outputted x,y,z,w format from fcn
         self._elements["root_body"].set("quat", array_to_string(rot))
 
     def set_joint_attribute(self, attrib, values, force=True):

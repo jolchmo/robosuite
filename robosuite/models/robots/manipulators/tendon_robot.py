@@ -32,13 +32,6 @@ class Tendon(ManipulatorModel):
         return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
     @property
-    def base_xpos_offset(self):
-        return {
-            # 按需修改
-            "table": lambda table_length: (-table_length/3, 0, table_length+0.5)
-        }
-
-    @property
     def top_offset(self):
         return np.array((0, 0, 0))
 
